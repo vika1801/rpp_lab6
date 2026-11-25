@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lr6_user
+      POSTGRES_PASSWORD: lr6_password
+      POSTGRES_DB: lr6_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lr6_user -d lr6_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+asyncpg://lr6_user:lr6_password@postgres:5432/lr6_db
+      USE_DATALOADER: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
